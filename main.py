@@ -81,10 +81,10 @@ def list_quotes(request: Request, search: str = None, status: str = None):
 @app.get("/quotes/new", response_class=HTMLResponse)
 def new_quote_form(request: Request):
     return templates.TemplateResponse(
-    request,
-    "quote_new.html",
-    {}
-)
+        request,
+        "quote_new.html",
+        {}
+    )
 
 @app.get("/quotes/{quote_id}/edit", response_class=HTMLResponse)
 def edit_quote(quote_id: int, request: Request):
