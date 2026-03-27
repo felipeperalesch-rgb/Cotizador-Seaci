@@ -28,10 +28,20 @@ def list_quotes(request: Request, search: str = None, status: str = None):
     if status and status != "Todas":
         query = query.eq("status", status)
 
-    quotes = query.order("date", desc=True).execute().data
+   response = query.order("date", desc=True).execute()
+
+if not response or not response.data:
+    quotes = []
+else:
+    quotes = response.data
 
     # ✅ Obtener todos los items de todas las cotizaciones en una sola consulta
-    all_items = supabase.table("items").select("*").execute().data
+ items_response = supabase.table("items").select("*").execute()
+
+if not items_response or not items_response.data:
+    all_items = []
+else:
+    all_items = items_response.data
 
     # ✅ Agrupar por quote_id usando defaultdict
     items_por_cotizacion = defaultdict(list)
