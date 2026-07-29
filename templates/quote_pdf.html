@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Cotización {{ quote.folio }}</title>
+
+  <style>
+    @page {
+      size: A4 landscape;
+      margin: 0;
+
+      @bottom-right {
+        content: "Página " counter(page) " de " counter(pages);
+        font-family: "DejaVu Sans", Arial, sans-serif;
+        font-size: 7pt;
+        color: #6a6f73;
+      }
+    }
+
+    :root {
+      --dark: #080d11;
+      --dark-2: #151c21;
+      --green: #94c11f;
+      --green-dark: #77a500;
+      --line: #d8dde0;
+      --soft: #f3f5f6;
+      --text-soft: #5d656c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--dark);
+      font-family: "DejaVu Sans", Arial, sans-serif;
+      font-size: 8.2pt;
+      line-height: 1.32;
+      background: #fff;
+    }
+
+    .page {
+      min-height: 210mm;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* HEADER */
+    .header {
+      width: 100%;
+      display: table;
+      table-layout: fixed;
+      border-collapse: collapse;
+      page-break-inside: avoid;
+    }
+
+    .brand,
+    .quote-head {
+      display: table-cell;
+      vertical-align: middle;
+      height: 36mm;
+    }
+
+    .brand {
+      width: 52%;
+      padding: 3mm 9mm;
+      background: var(--dark);
+      border-right: 4mm solid var(--green);
+    }
+
+    .brand img {
+      width: 108mm;
+      max-height: 27mm;
+      object-fit: contain;
+      object-position: left center;
+    }
+
+    .quote-head {
+      width: 48%;
+      padding: 3mm 8mm 2mm 15mm;
+      background: #fff;
+    }
+
+    .quote-head h1 {
+      margin: 0 0 2mm;
+      font-size: 20pt;
+      line-height: 1;
+      letter-spacing: .3mm;
+    }
+
+    .meta {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.5pt;
+    }
+
+    .meta td {
+      border: 0;
+      padding: .7mm 0;
+    }
+
+    .meta-label {
+      width: 20mm;
+      font-weight: 700;
+    }
+
+    .meta-value {
+      text-align: left;
+      color: var(--green-dark);
+      font-weight: 700;
+    }
+
+    /* BODY LAYOUT */
+    .content {
+      width: 100%;
+      display: table;
+      table-layout: fixed;
+      padding: 2mm 6mm 4mm 6mm;
+      flex: 1 0 auto;
+    }
+
+    .main,
+    .side {
+      display: table-cell;
+      vertical-align: top;
+    }
+
+    .main {
+      width: 76%;
+      padding-right: 5mm;
+    }
+
+    .side {
+      width: 24%;
+      padding-left: 4mm;
+      border-left: .3mm solid var(--line);
+    }
+
+    /* CLIENT DATA */
+    .client {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 3mm;
+      page-break-inside: avoid;
+    }
+
+    .client td {
+      width: 50%;
+      padding: 1.5mm 2mm;
+      border-bottom: .2mm solid #eceeef;
+      vertical-align: top;
+    }
+
+    .client strong {
+      display: inline-block;
+      min-width: 22mm;
+    }
+
+    /* SECTION HEADERS */
+    .section-title {
+      margin: 0 0 2.5mm;
+      padding: 2.2mm 3mm;
+      color: #fff;
+      background: var(--dark);
+      font-size: 8.7pt;
+      text-transform: uppercase;
+      letter-spacing: .12mm;
+      page-break-after: avoid;
+      border-bottom: .8mm solid var(--green);
+    }
+
+    /* ITEMS TABLE */
+    .items {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      margin-bottom: 3.5mm;
+      font-size: 7.8pt;
+    }
+
+    .items thead {
+      display: table-header-group;
+    }
+
+    .items tr {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .items th {
+      padding: 2.4mm 1.8mm;
+      color: #fff;
+      background: var(--dark);
+      border-right: .25mm solid var(--green-dark);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .items td {
+      padding: 2.4mm 2mm;
+      border: .25mm solid var(--line);
+      vertical-align: top;
+    }
+
+    .items tbody tr:nth-child(even) {
+      background: #fafbfb;
+    }
+
+    .description { width: 53%; }
+    .qty { width: 9%; text-align: center; }
+    .unit { width: 11%; text-align: center; }
+    .money { width: 13.5%; text-align: right; white-space: nowrap; }
+
+    /* NOTES + TOTALS */
+    .lower {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      page-break-inside: avoid;
+    }
+
+    .lower td {
+      border: 0;
+      vertical-align: top;
+      padding: 0;
+    }
+
+    .notes-cell {
+      width: 58%;
+      padding-right: 5mm !important;
+    }
+
+    .totals-cell {
+      width: 42%;
+    }
+
+    .notes {
+      min-height: 23mm;
+      padding: 3mm 3.5mm;
+      border: .25mm solid var(--line);
+      font-size: 7.3pt;
+      white-space: pre-line;
+    }
+
+    .notes h3 {
+      margin: 0 0 1.5mm;
+      color: var(--green-dark);
+      font-size: 8.4pt;
+    }
+
+    .totals {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--soft);
+    }
+
+    .totals td {
+      padding: 2.2mm 4mm;
+      border: 0;
+      font-size: 9pt;
+      font-weight: 700;
+    }
+
+    .totals .value {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .totals .grand-total td {
+      background: var(--green);
+      font-size: 13pt;
+      padding-top: 2.7mm;
+      padding-bottom: 2.7mm;
+    }
+
+    /* SIDE PANEL */
+    .side-box {
+      margin-bottom: 3mm;
+      page-break-inside: avoid;
+    }
+
+    .side-title {
+      margin: 0;
+      padding: 2.2mm 3mm;
+      color: #fff;
+      background: var(--dark);
+      border-bottom: .8mm solid var(--green);
+      font-size: 8.2pt;
+      text-transform: uppercase;
+    }
+
+    .side-content {
+      padding: 2.5mm 3mm;
+      border: .25mm solid var(--line);
+      border-top: 0;
+      font-size: 7.2pt;
+    }
+
+    .condition {
+      margin-bottom: 2.2mm;
+    }
+
+    .condition:last-child {
+      margin-bottom: 0;
+    }
+
+    .condition strong {
+      display: block;
+      margin-bottom: .5mm;
+      color: var(--dark);
+    }
+
+    .condition span {
+      color: var(--text-soft);
+      white-space: pre-line;
+    }
+
+    /* FOOTER */
+    .footer {
+      margin-top: auto;
+      min-height: 15mm;
+      display: table;
+      width: 100%;
+      table-layout: fixed;
+      background: var(--dark);
+      border-top: .8mm solid var(--green);
+      color: #fff;
+      font-size: 7pt;
+      flex: 0 0 auto;
+    }
+
+    .footer > div {
+      display: table-cell;
+      vertical-align: middle;
+      padding: 3mm 7mm;
+    }
+
+    .footer-left {
+      width: 72%;
+    }
+
+    .footer-right {
+      width: 28%;
+      text-align: right;
+      color: var(--green);
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="brand">
+      <img src="{{ logo_path }}" alt="SEACI">
+    </div>
+
+    <div class="quote-head">
+      <h1>COTIZACIÓN</h1>
+
+      <table class="meta">
+        <tr>
+          <td class="meta-label">Folio:</td>
+          <td class="meta-value">{{ quote.folio }}</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Fecha:</td>
+          <td class="meta-value">{{ quote.formatted_date }}</td>
+        </tr>
+        <tr>
+          <td class="meta-label">Moneda:</td>
+          <td class="meta-value">{{ quote.currency }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <main class="main">
+
+      <table class="client">
+        <tr>
+          <td><strong>Cliente:</strong> {{ quote.client_company or quote.client_name }}</td>
+          <td><strong>RFC:</strong> {% if quote.client_rfc %}{{ quote.client_rfc }}{% else %}—{% endif %}</td>
+        </tr>
+        <tr>
+          <td><strong>Contacto:</strong> {{ quote.client_name }}</td>
+          <td><strong>Correo:</strong> {{ quote.client_email or "—" }}</td>
+        </tr>
+        <tr>
+          <td><strong>Dirección:</strong> {{ quote.client_address or "—" }}</td>
+          <td><strong>Teléfono:</strong> {{ quote.client_phone or "—" }}</td>
+        </tr>
+      </table>
+
+      <table class="items">
+        <thead>
+          <tr>
+            <th class="description">Descripción</th>
+            <th class="qty">Cant.</th>
+            <th class="unit">Unidad</th>
+            <th class="money">Precio unitario</th>
+            <th class="money">Importe</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for it in items %}
+          <tr>
+            <td class="description">{{ it.description }}</td>
+            <td class="qty">{{ "{:,.2f}".format(it.quantity) }}</td>
+            <td class="unit">{{ it.unit or "—" }}</td>
+            <td class="money">{{ quote.currency }} {{ "{:,.2f}".format(it.unit_price) }}</td>
+            <td class="money">{{ quote.currency }} {{ "{:,.2f}".format(it.amount) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <table class="lower">
+        <tr>
+          <td class="notes-cell">
+            <div class="notes">
+              <h3>● NOTAS</h3>
+              {% if quote.notes %}
+              {{ quote.notes }}
+              {% else %}
+              Sin notas adicionales.
+              {% endif %}
+            </div>
+          </td>
+
+          <td class="totals-cell">
+            <table class="totals">
+              <tr>
+                <td>SUBTOTAL</td>
+                <td class="value">{{ quote.currency }} {{ "{:,.2f}".format(quote.subtotal) }}</td>
+              </tr>
+
+              {% if quote.discount_amount > 0 %}
+              <tr>
+                <td>DESCUENTO ({{ "{:,.2f}".format(quote.discount_rate) }}%)</td>
+                <td class="value">− {{ quote.currency }} {{ "{:,.2f}".format(quote.discount_amount) }}</td>
+              </tr>
+              {% endif %}
+
+              {% if quote.tax_amount > 0 %}
+              <tr>
+                <td>IVA ({{ "{:,.2f}".format(quote.tax_rate) }}%)</td>
+                <td class="value">{{ quote.currency }} {{ "{:,.2f}".format(quote.tax_amount) }}</td>
+              </tr>
+              {% endif %}
+
+              <tr class="grand-total">
+                <td>TOTAL</td>
+                <td class="value">{{ quote.currency }} {{ "{:,.2f}".format(quote.total) }}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+</main>
+
+    <aside class="side">
+
+      {% if quote.validity or quote.payment_terms or quote.warranty %}
+      <div class="side-box">
+        <h2 class="side-title">Condiciones comerciales</h2>
+
+        <div class="side-content">
+          {% if quote.validity %}
+          <div class="condition">
+            <strong>Vigencia</strong>
+            <span>{{ quote.validity }}</span>
+          </div>
+          {% endif %}
+
+          {% if quote.payment_terms %}
+          <div class="condition">
+            <strong>Forma de pago</strong>
+            <span>{{ quote.payment_terms }}</span>
+          </div>
+          {% endif %}
+
+          {% if quote.warranty %}
+          <div class="condition">
+            <strong>Garantía</strong>
+            <span>{{ quote.warranty }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="side-box">
+        <h2 class="side-title">Observaciones</h2>
+
+        <div class="side-content">
+          Esta propuesta está basada en la información proporcionada por el cliente.
+          Cualquier modificación en el alcance puede generar ajustes en tiempo y costo.
+        </div>
+      </div>
+
+      <div class="side-box">
+        <h2 class="side-title">Datos SEACI</h2>
+
+        <div class="side-content">
+          <div class="condition">
+            <strong>RFC</strong>
+            <span>PECF870731DA9</span>
+          </div>
+          <div class="condition">
+            <strong>Correo</strong>
+            <span>seaci.ventas@gmail.com</span>
+          </div>
+          <div class="condition">
+            <strong>Sitio web</strong>
+            <span>seaci.com.mx</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-left">
+      SEACI · seaci.ventas@gmail.com · seaci.com.mx · Monterrey, N.L., México
+    </div>
+    <div class="footer-right">
+      INGENIERÍA QUE MUEVE LA INDUSTRIA
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
